@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Daily Digest</title>
+    <meta name="description" content="每日精选 AI、Vibe Coding 资讯">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #0f1520;
+            --bg-card: #141c2b;
+            --bg-card-hover: #1a2436;
+            --bg-sidebar: #0c1018;
+
+            --text-primary: #e8edf5;
+            --text-secondary: #8b95a8;
+            --text-muted: #5a6578;
+
+            --accent-cyan: #00d4ff;
+            --accent-magenta: #ff00aa;
+            --accent-purple: #8b5cf6;
+            --accent-green: #00ff88;
+            --accent-orange: #ff9500;
+            --accent-blue: #3b82f6;
+
+            --glow-cyan: rgba(0, 212, 255, 0.15);
+            --glow-magenta: rgba(255, 0, 170, 0.1);
+
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-glow: rgba(0, 212, 255, 0.3);
+
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            --sidebar-width: 220px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-display);
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% -10%, var(--glow-cyan), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 110%, var(--glow-magenta), transparent);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Subtle grid pattern */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-subtle);
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .sidebar-title {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-subtitle {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--accent-cyan);
+        }
+
+        .history-list {
+            padding: 0.5rem 0;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 2px solid transparent;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .history-item.active {
+            background: rgba(0, 212, 255, 0.08);
+            border-left-color: var(--accent-cyan);
+        }
+
+        .history-date {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .history-item.active .history-date {
+            color: var(--accent-cyan);
+        }
+
+        .history-count {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+        }
+
+        .history-item.active .history-count {
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--accent-cyan);
+        }
+
+        /* Main content */
+        .main-wrapper {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Header */
+        header {
+            padding: 2.5rem 0 2rem;
+            position: relative;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+
+        .brand {
+            flex: 1;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: 0 0 20px var(--glow-cyan);
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .site-description {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .site-description::before {
+            content: '// ';
+            color: var(--accent-cyan);
+        }
+
+        .author {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .author span {
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 1.5rem;
+            padding: 0.75rem 1.25rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Current date display */
+        .current-date-display {
+            padding: 1rem 0;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .current-date-label {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.25rem;
+        }
+
+        .current-date-value {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .current-date-value::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-cyan);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Article cards */
+        .articles-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        article {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        article::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        article:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-glow);
+            transform: translateY(-2px);
+            box-shadow:
+                0 4px 20px rgba(0, 0, 0, 0.3),
+                0 0 30px var(--glow-cyan);
+        }
+
+        article:hover::before {
+            opacity: 1;
+        }
+
+        article h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        article h2 a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        article h2 a:hover {
+            color: var(--accent-cyan);
+        }
+
+        .summary {
+            font-size: 0.875rem;
+            color: #b8c4d6;
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .source {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: #a0aec0;
+            padding: 0.25rem 0.6rem;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .tag {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            font-weight: 500;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .tag.ai-news {
+            color: var(--accent-magenta);
+            background: rgba(255, 0, 170, 0.1);
+            border: 1px solid rgba(255, 0, 170, 0.3);
+        }
+
+        .tag.ai-tools {
+            color: var(--accent-cyan);
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .tag.tutorial {
+            color: var(--accent-green);
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .tag.opensource {
+            color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .tag.opinion {
+            color: var(--accent-orange);
+            background: rgba(255, 149, 0, 0.1);
+            border: 1px solid rgba(255, 149, 0, 0.3);
+        }
+
+        .tag.discussion {
+            color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .score {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .score::before {
+            content: '▲';
+            font-size: 0.6rem;
+            color: var(--accent-orange);
+        }
+
+        .stars {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .stars::before {
+            content: '★';
+            color: var(--accent-orange);
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border-subtle);
+            text-align: center;
+        }
+
+        .footer-content {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .footer-brand {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-brand span {
+            color: var(--accent-cyan);
+        }
+
+        .footer-meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .footer-meta span::before {
+            content: '› ';
+            color: var(--accent-cyan);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .articles-grid article {
+            animation: fadeInUp 0.4s ease-out backwards;
+        }
+
+        .articles-grid article:nth-child(1) { animation-delay: 0.05s; }
+        .articles-grid article:nth-child(2) { animation-delay: 0.1s; }
+        .articles-grid article:nth-child(3) { animation-delay: 0.15s; }
+        .articles-grid article:nth-child(4) { animation-delay: 0.2s; }
+        .articles-grid article:nth-child(5) { animation-delay: 0.25s; }
+
+        /* Mobile sidebar toggle */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            width: 48px;
+            height: 48px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-radius: 50%;
+            color: var(--accent-cyan);
+            font-size: 1.25rem;
+            cursor: pointer;
+            z-index: 200;
+            box-shadow: 0 0 20px var(--glow-cyan);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            :root {
+                --sidebar-width: 0px;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                width: 220px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            body::before,
+            body::after {
+                left: 0;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .header-stats {
+                width: 100%;
+                justify-content: center;
+            }
+
+            h1 {
+                font-size: 1.3rem;
+            }
+
+            article {
+                padding: 1rem 1.25rem;
+            }
+
+            article h2 {
+                font-size: 0.95rem;
+            }
+
+            .meta {
+                gap: 0.4rem;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-card);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">历史记录</div>
+            <div class="sidebar-subtitle">ARCHIVE</div>
+        </div>
+        <nav class="history-list">
+            
+            <div class="history-item active" data-date="2026-02-13" onclick="switchDate('2026-02-13')">
+                <span class="history-date">2026-02-13</span>
+                <span class="history-count">50</span>
+            </div>
+            
+        </nav>
+    </aside>
+
+    <!-- Mobile toggle -->
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- Main content -->
+    <div class="main-wrapper">
+        <div class="container">
+            <header>
+                <div class="header-content">
+                    <div class="brand">
+                        <div class="logo">
+                            <div class="logo-icon">⚡</div>
+                            <h1>AI DAILY DIGEST</h1>
+                        </div>
+                        <p class="site-description">每日精选 AI、Vibe Coding 资讯</p>
+                        <p class="author">by <span>Webber</span></p>
+                    </div>
+                    <div class="header-stats">
+                        <div class="stat">
+                            <span class="stat-value" id="currentCount">50</span>
+                            <span class="stat-label">资讯</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">02/13</span>
+                            <span class="stat-label">日期</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main>
+                <div class="current-date-display">
+                    <div class="current-date-label">当前查看</div>
+                    <div class="current-date-value" id="currentDateDisplay">2026-02-13</div>
+                </div>
+
+                <div class="articles-grid" id="articlesContainer">
+                    
+                        
+                        <article>
+                            <h2><a href="https://blog.google/company-news/outreach-and-initiatives/accessibility/natively-adaptive-interfaces-ai-accessibility/" target="_blank" rel="noopener">Natively Adaptive Interfaces: A new framework for AI accessibility</a></h2>
+                            <p class="summary">A collage of four images, the first of a woman with curly hair in front of a silver laptop, the seco...</p>
+                            <div class="meta">
+                                <span class="source">Google AI Blog</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/us-ski-snowboard-tool-winter-olympics-2026/" target="_blank" rel="noopener">How Google Cloud is helping Team USA elevate their tricks with AI</a></h2>
+                            <p class="summary">A woman outdoors in the snow looks at a tablet. A half pipe is behind her.</p>
+                            <div class="meta">
+                                <span class="source">Google AI Blog</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://blog.google/innovation-and-ai/products/google-ai-updates-january-2026/" target="_blank" rel="noopener">The latest AI news we announced in January</a></h2>
+                            <p class="summary">mp4 showing a carousel of images including a card reading "Help that's made for you"</p>
+                            <div class="meta">
+                                <span class="source">Google AI Blog</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://blog.google/innovation-and-ai/technology/ai/ai-to-preserve-endangered-species/" target="_blank" rel="noopener">How we’re helping preserve the genetic information of endangered species with AI</a></h2>
+                            <p class="summary">A four-part vertical collage showing a cotton-top tamarin, an ibex, a golden lion tamarin, and a pen...</p>
+                            <div class="meta">
+                                <span class="source">Google AI Blog</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://blog.google/innovation-and-ai/models-and-research/google-deepmind/kaggle-game-arena-updates/" target="_blank" rel="noopener">Advancing AI benchmarking with Game Arena</a></h2>
+                            <p class="summary">An illustration of a King and Ace playing card, a wolf's head, two chess pieces, a poker chip, and o...</p>
+                            <div class="meta">
+                                <span class="source">Google AI Blog</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://www.technologyreview.com/2026/02/12/1132819/the-download-ai-enhanced-cybercrime-and-secure-ai-assistants/" target="_blank" rel="noopener">The Download: AI-enhanced cybercrime, and secure AI assistants</a></h2>
+                            <p class="summary">This is today&#8217;s edition of The Download, our weekday newsletter that provides a daily dose of...</p>
+                            <div class="meta">
+                                <span class="source">MIT Tech Review</span>
+                                
+                                <span class="tag ai-tools">AI工具</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://www.technologyreview.com/2026/02/12/1132386/ai-already-making-online-swindles-easier/" target="_blank" rel="noopener">AI is already making online crimes easier. It could get much worse.</a></h2>
+                            <p class="summary">Anton Cherepanov is always on the lookout for something interesting. And in late August last year, h...</p>
+                            <div class="meta">
+                                <span class="source">MIT Tech Review</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://www.technologyreview.com/2026/02/12/1132790/evs-progress-africa/" target="_blank" rel="noopener">Why EVs are gaining ground in Africa</a></h2>
+                            <p class="summary">EVs are getting cheaper and more common all over the world. But the technology still faces major cha...</p>
+                            <div class="meta">
+                                <span class="source">MIT Tech Review</span>
+                                
+                                <span class="tag discussion">社区讨论</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://www.technologyreview.com/2026/02/12/1132811/whats-next-for-chinese-open-source-ai/" target="_blank" rel="noopener">What’s next for Chinese open-source AI</a></h2>
+                            <p class="summary">MIT Technology Review’s What’s Next series looks across industries, trends, and technologies to give...</p>
+                            <div class="meta">
+                                <span class="source">MIT Tech Review</span>
+                                
+                                <span class="tag discussion">社区讨论</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://www.technologyreview.com/2026/02/11/1132768/is-a-secure-ai-assistant-possible/" target="_blank" rel="noopener">Is a secure AI assistant possible?</a></h2>
+                            <p class="summary">AI agents are a risky business. Even when stuck inside the chatbox window, LLMs will make mistakes a...</p>
+                            <div class="meta">
+                                <span class="source">MIT Tech Review</span>
+                                
+                                <span class="tag ai-tools">AI工具</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://www.technologyreview.com/2026/02/11/1132724/the-download-inside-the-quitgpt-movement-and-evs-in-africa/" target="_blank" rel="noopener">The Download: inside the QuitGPT movement, and EVs in Africa</a></h2>
+                            <p class="summary">This is today&#8217;s edition of The Download, our weekday newsletter that provides a daily dose of...</p>
+                            <div class="meta">
+                                <span class="source">MIT Tech Review</span>
+                                
+                                <span class="tag discussion">社区讨论</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://www.technologyreview.com/2026/02/10/1132577/a-quitgpt-campaign-is-urging-people-to-cancel-chatgpt-subscriptions/" target="_blank" rel="noopener">A “QuitGPT” campaign is urging people to cancel their ChatGPT subscriptions</a></h2>
+                            <p class="summary">In September, Alfred Stephen, a freelance software developer in Singapore, purchased a ChatGPT Plus...</p>
+                            <div class="meta">
+                                <span class="source">MIT Tech Review</span>
+                                
+                                <span class="tag discussion">社区讨论</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://www.technologyreview.com/2026/02/10/1132608/the-download-making-ai-work-and-why-the-moltbook-hype-is-similar-to-pokemon/" target="_blank" rel="noopener">The Download: Making AI Work, and why the Moltbook hype is similar to Pokémon</a></h2>
+                            <p class="summary">This is today&#8217;s edition of The Download, our weekday newsletter that provides a daily dose of...</p>
+                            <div class="meta">
+                                <span class="source">MIT Tech Review</span>
+                                
+                                <span class="tag discussion">社区讨论</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://www.technologyreview.com/2026/02/09/1132537/a-lesson-from-pokemon/" target="_blank" rel="noopener">Why the Moltbook frenzy was like Pokémon</a></h2>
+                            <p class="summary">This story originally appeared in The Algorithm, our weekly newsletter on AI. To get stories like th...</p>
+                            <div class="meta">
+                                <span class="source">MIT Tech Review</span>
+                                
+                                <span class="tag ai-tools">AI工具</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://arstechnica.com/ai/2026/02/openai-sidesteps-nvidia-with-unusually-fast-coding-model-on-plate-sized-chips/" target="_blank" rel="noopener">OpenAI sidesteps Nvidia with unusually fast coding model on plate-sized chips</a></h2>
+                            <p class="summary">OpenAI's new GPT‑5.3‑Codex‑Spark is 15 times faster at coding than its predecessor.</p>
+                            <div class="meta">
+                                <span class="source">Ars Technica AI</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://arstechnica.com/security/2026/02/once-hobbled-lumma-stealer-is-back-with-lures-that-are-hard-to-resist/" target="_blank" rel="noopener">Once-hobbled Lumma Stealer is back with lures that are hard to resist</a></h2>
+                            <p class="summary">ClickFix bait, combined with advanced Castleloader malware, is installing Lumma "at scale."</p>
+                            <div class="meta">
+                                <span class="source">Ars Technica AI</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://arstechnica.com/information-technology/2026/02/openai-researcher-quits-over-fears-that-chatgpt-ads-could-manipulate-users/" target="_blank" rel="noopener">OpenAI researcher quits over ChatGPT ads, warns of "Facebook" path</a></h2>
+                            <p class="summary">Zoë Hitzig resigned on the same day OpenAI began testing ads in its chatbot.</p>
+                            <div class="meta">
+                                <span class="source">Ars Technica AI</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://arstechnica.com/ai/2026/02/sixteen-claude-ai-agents-working-together-created-a-new-c-compiler/" target="_blank" rel="noopener">Sixteen Claude AI agents working together created a new C compiler</a></h2>
+                            <p class="summary">The $20,000 experiment compiled a Linux kernel but needed deep human management.</p>
+                            <div class="meta">
+                                <span class="source">Ars Technica AI</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://arstechnica.com/information-technology/2026/02/ai-companies-want-you-to-stop-chatting-with-bots-and-start-managing-them/" target="_blank" rel="noopener">AI companies want you to stop chatting with bots and start managing them</a></h2>
+                            <p class="summary">Claude Opus 4.6 and OpenAI Frontier pitch a future of supervising AI agents.</p>
+                            <div class="meta">
+                                <span class="source">Ars Technica AI</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://arstechnica.com/information-technology/2026/02/openai-is-hoppin-mad-about-anthropics-new-super-bowl-tv-ads/" target="_blank" rel="noopener">OpenAI is hoppin' mad about Anthropic's new Super Bowl TV ads</a></h2>
+                            <p class="summary">Sam Altman calls AI competitor "dishonest" and "authoritarian" in lengthy post on X.</p>
+                            <div class="meta">
+                                <span class="source">Ars Technica AI</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://arstechnica.com/ai/2026/02/increase-of-ai-bots-on-the-internet-sparks-arms-race/" target="_blank" rel="noopener">Increase of AI bots on the Internet sparks arms race</a></h2>
+                            <p class="summary">Publishers are rolling out more aggressive defenses.</p>
+                            <div class="meta">
+                                <span class="source">Ars Technica AI</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://blog.mozilla.ai/evaluating-multilingual-context-aware-guardrails-evidence-from-a-humanitarian-llm-use-case/" target="_blank" rel="noopener">Evaluating Multilingual, Context-Aware Guardrails: A Humanitarian LLM Use Case</a></h2>
+                            <p class="summary">Article URL: https://blog.mozilla.ai/evaluating-multilingual-context-aware-guardrails-evidence-from-...</p>
+                            <div class="meta">
+                                <span class="source">Hacker News AI</span>
+                                
+                                <span class="tag discussion">社区讨论</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://openai.com/index/introducing-gpt-5-3-codex-spark/" target="_blank" rel="noopener">GPT‑5.3‑Codex‑Spark</a></h2>
+                            <p class="summary">Article URL: https://openai.com/index/introducing-gpt-5-3-codex-spark/
+Comments URL: https://news.yc...</p>
+                            <div class="meta">
+                                <span class="source">Hacker News AI</span>
+                                
+                                <span class="tag discussion">社区讨论</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://theshamblog.com/an-ai-agent-published-a-hit-piece-on-me/" target="_blank" rel="noopener">An AI agent published a hit piece on me</a></h2>
+                            <p class="summary">Previously: AI agent opens a PR write a blogpost to shames the maintainer who closes it - https://ne...</p>
+                            <div class="meta">
+                                <span class="source">Hacker News AI</span>
+                                
+                                <span class="tag discussion">社区讨论</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/MachineLearning/comments/1qtjnbc/d_selfpromotion_thread/" target="_blank" rel="noopener">[D] Self-Promotion Thread</a></h2>
+                            <p class="summary">Please post your personal projects, startups, product placements, collaboration needs, blogs etc.
+
+P...</p>
+                            <div class="meta">
+                                <span class="source">r/MachineLearning</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                <span class="score">9</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/MachineLearning/comments/1r30nzv/d_we_scanned_18000_exposed_openclaw_instances_and/" target="_blank" rel="noopener">[D] We scanned 18,000 exposed OpenClaw instances and found 15% of community skills contain malicious instructions</a></h2>
+                            <p class="summary">I do security research and recently started looking at autonomous agents after OpenClaw blew up. Wha...</p>
+                            <div class="meta">
+                                <span class="source">r/MachineLearning</span>
+                                
+                                <span class="tag opensource">开源项目</span>
+                                
+                                
+                                <span class="score">73</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/MachineLearning/comments/1r3gqng/r_has_anyone_experimented_with_mhc_on_traditional/" target="_blank" rel="noopener">[R] Has anyone experimented with MHC on traditional autoencoders/convolutional architectures?</a></h2>
+                            <p class="summary">I'm currently making a baseline autoencoder for this super freaking huge hyperspectral image dataset...</p>
+                            <div class="meta">
+                                <span class="source">r/MachineLearning</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                <span class="score">8</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/MachineLearning/comments/1r37m2f/d_conformal_prediction_vs_naive_thresholding_to/" target="_blank" rel="noopener">[D] Conformal Prediction vs naive thresholding to represent uncertainty</a></h2>
+                            <p class="summary">So I recently found out about conformal prediction (cp). I’m still trying to understand it and impli...</p>
+                            <div class="meta">
+                                <span class="source">r/MachineLearning</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                <span class="score">5</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/LocalLLaMA/comments/1r3hlfq/ug_student_launches_dhi5b_trained_from_scratch/" target="_blank" rel="noopener">UG student launches Dhi-5B (Trained from Scratch)</a></h2>
+                            <p class="summary">Hii everyone,
+
+I present Dhi-5B: A 5 billion parameter Multimodal Language Model trained compute opt...</p>
+                            <div class="meta">
+                                <span class="source">r/LocalLLaMA</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                <span class="score">68</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/LocalLLaMA/comments/1r35d2x/minimaxai_minimaxm25_has_230b_parameters_and_10b/" target="_blank" rel="noopener">MiniMaxAI MiniMax-M2.5 has 230b parameters and 10b active parameters</a></h2>
+                            <p class="summary">OpenHands reveals the model size in their announcement.
+
+Still waiting for the model to appear on HF...</p>
+                            <div class="meta">
+                                <span class="source">r/LocalLLaMA</span>
+                                
+                                <span class="tag ai-tools">AI工具</span>
+                                
+                                
+                                <span class="score">290</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/artificial/comments/1r35se7/spotify_says_its_best_developers_havent_written_a/" target="_blank" rel="noopener">Spotify says its best developers haven't written a line of code since December, thanks to AI</a></h2>
+                            <p class="summary">Reddit 讨论 - 76 条评论</p>
+                            <div class="meta">
+                                <span class="source">r/artificial</span>
+                                
+                                <span class="tag discussion">社区讨论</span>
+                                
+                                
+                                <span class="score">98</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/artificial/comments/1r3gbrx/1password_open_sources_a_benchmark_to_stop_ai/" target="_blank" rel="noopener">1Password open sources a benchmark to stop AI agents from leaking credentials</a></h2>
+                            <p class="summary">The benchmark tests whether AI agents behave safely during real workflows, including opening emails,...</p>
+                            <div class="meta">
+                                <span class="source">r/artificial</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                <span class="score">7</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/artificial/comments/1r38tis/whats_the_most_underrated_way_youve_seen_ai_used/" target="_blank" rel="noopener">What's the most underrated way you've seen AI used for actual business tasks?</a></h2>
+                            <p class="summary">Everyone talks about AI for chatbots and image generation. But I've been finding the most value in b...</p>
+                            <div class="meta">
+                                <span class="source">r/artificial</span>
+                                
+                                <span class="tag ai-tools">AI工具</span>
+                                
+                                
+                                <span class="score">5</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/artificial/comments/1r3dja8/humanitys_pattern_of_delayed_harm_intervention_is/" target="_blank" rel="noopener">Humanity's Pattern of Delayed Harm Intervention Is The Threat, Not AI.</a></h2>
+                            <p class="summary">AI is not the threat. Humanity repeating the same tragic pattern, provable with a well-established p...</p>
+                            <div class="meta">
+                                <span class="source">r/artificial</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/artificial/comments/1r2wpd2/planoai_046_signalsbased_tracing_for_agents_via_a/" target="_blank" rel="noopener">Planoai 0.4.6 🚀 Signals-based tracing for agents via a terminal UI</a></h2>
+                            <p class="summary">The CLI is becoming a dominant surface area for developer productivity - it offers such an ergonomic...</p>
+                            <div class="meta">
+                                <span class="source">r/artificial</span>
+                                
+                                <span class="tag ai-tools">AI工具</span>
+                                
+                                
+                                <span class="score">7</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/ChatGPT/comments/1o6jins/updates_for_chatgpt/" target="_blank" rel="noopener">Updates for ChatGPT</a></h2>
+                            <p class="summary">We made ChatGPT pretty restrictive to make sure we were being careful with mental health issues. We...</p>
+                            <div class="meta">
+                                <span class="source">r/ChatGPT</span>
+                                
+                                <span class="tag ai-tools">AI工具</span>
+                                
+                                
+                                <span class="score">3517</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/ChatGPT/comments/1nvea4p/gpt4ogpt5_complaints_megathread/" target="_blank" rel="noopener">GPT-4o/GPT-5 complaints megathread</a></h2>
+                            <p class="summary">To keep the rest of the sub clear with the release of Sora 2, this is the new containment thread for...</p>
+                            <div class="meta">
+                                <span class="source">r/ChatGPT</span>
+                                
+                                <span class="tag ai-tools">AI工具</span>
+                                
+                                
+                                <span class="score">567</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://reddit.com/r/ChatGPT/comments/1r3ceiz/i_asked_chatgpt_to_recreate_lady_angry_at_cat/" target="_blank" rel="noopener">I asked Chatgpt to recreate "lady angry at cat" meme in different styles</a></h2>
+                            <p class="summary">Someone had posted a better Egyptian style reproduction in a different sub and I tried to recreate t...</p>
+                            <div class="meta">
+                                <span class="source">r/ChatGPT</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                <span class="score">319</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="http://blog.can.ac/2026/02/12/the-harness-problem/" target="_blank" rel="noopener">Improving 15 LLMs at Coding in One Afternoon. Only the Harness Changed</a></h2>
+                            <p class="summary">HN 热门 - 648 分, 247 条评论</p>
+                            <div class="meta">
+                                <span class="source">Hacker News</span>
+                                
+                                <span class="tag discussion">社区讨论</span>
+                                
+                                
+                                <span class="score">648</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://atha.io/blog/2026-02-12-viva" target="_blank" rel="noopener">Major European payment processor can't send email to Google Workspace users</a></h2>
+                            <p class="summary">HN 热门 - 497 分, 335 条评论</p>
+                            <div class="meta">
+                                <span class="source">Hacker News</span>
+                                
+                                <span class="tag discussion">社区讨论</span>
+                                
+                                
+                                <span class="score">497</span>
+                                
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools" target="_blank" rel="noopener">x1xhlol/system-prompts-and-models-of-ai-tools - FULL Augment Code, Claude Code, Cluely, CodeBuddy, Comet, Cursor, Devin AI, Junie, Kiro, Leap.new, L</a></h2>
+                            <p class="summary">FULL Augment Code, Claude Code, Cluely, CodeBuddy, Comet, Cursor, Devin AI, Junie, Kiro, Leap.new, L...</p>
+                            <div class="meta">
+                                <span class="source">GitHub</span>
+                                
+                                <span class="tag ai-tools">AI工具</span>
+                                
+                                
+                                
+                                <span class="stars">114391</span>
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://github.com/Shubhamsaboo/awesome-llm-apps" target="_blank" rel="noopener">Shubhamsaboo/awesome-llm-apps - Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource</a></h2>
+                            <p class="summary">Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource...</p>
+                            <div class="meta">
+                                <span class="source">GitHub</span>
+                                
+                                <span class="tag ai-tools">AI工具</span>
+                                
+                                
+                                
+                                <span class="stars">94506</span>
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://github.com/google-gemini/gemini-cli" target="_blank" rel="noopener">google-gemini/gemini-cli - An open-source AI agent that brings the power of Gemini directly into your terminal.</a></h2>
+                            <p class="summary">An open-source AI agent that brings the power of Gemini directly into your terminal.</p>
+                            <div class="meta">
+                                <span class="source">GitHub</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                                <span class="stars">94399</span>
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://github.com/browser-use/browser-use" target="_blank" rel="noopener">browser-use/browser-use - 🌐 Make websites accessible for AI agents. Automate tasks online with ease.</a></h2>
+                            <p class="summary">🌐 Make websites accessible for AI agents. Automate tasks online with ease.</p>
+                            <div class="meta">
+                                <span class="source">GitHub</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                                <span class="stars">78287</span>
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://github.com/OpenHands/OpenHands" target="_blank" rel="noopener">OpenHands/OpenHands - 🙌 OpenHands: AI-Driven Development</a></h2>
+                            <p class="summary">🙌 OpenHands: AI-Driven Development</p>
+                            <div class="meta">
+                                <span class="source">GitHub</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                                <span class="stars">67807</span>
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://github.com/firecrawl/firecrawl" target="_blank" rel="noopener">firecrawl/firecrawl - 🔥 The Web Data API for AI - Turn entire websites into LLM-ready markdown or structured data</a></h2>
+                            <p class="summary">🔥 The Web Data API for AI - Turn entire websites into LLM-ready markdown or structured data</p>
+                            <div class="meta">
+                                <span class="source">GitHub</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                                <span class="stars">82089</span>
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://github.com/unclecode/crawl4ai" target="_blank" rel="noopener">unclecode/crawl4ai - 🚀🤖 Crawl4AI: Open-source LLM Friendly Web Crawler & Scraper. Don't be shy, join here: https://discor</a></h2>
+                            <p class="summary">🚀🤖 Crawl4AI: Open-source LLM Friendly Web Crawler & Scraper. Don't be shy, join here: https://discor...</p>
+                            <div class="meta">
+                                <span class="source">GitHub</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                                <span class="stars">60048</span>
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://github.com/microsoft/graphrag" target="_blank" rel="noopener">microsoft/graphrag - A modular graph-based Retrieval-Augmented Generation (RAG) system</a></h2>
+                            <p class="summary">A modular graph-based Retrieval-Augmented Generation (RAG) system</p>
+                            <div class="meta">
+                                <span class="source">GitHub</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                                <span class="stars">30918</span>
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://github.com/patchy631/ai-engineering-hub" target="_blank" rel="noopener">patchy631/ai-engineering-hub - In-depth tutorials on LLMs, RAGs and real-world AI agent applications.</a></h2>
+                            <p class="summary">In-depth tutorials on LLMs, RAGs and real-world AI agent applications.</p>
+                            <div class="meta">
+                                <span class="source">GitHub</span>
+                                
+                                <span class="tag ai-tools">AI工具</span>
+                                
+                                
+                                
+                                <span class="stars">28998</span>
+                                
+                            </div>
+                        </article>
+                        
+                        <article>
+                            <h2><a href="https://github.com/ItzCrazyKns/Perplexica" target="_blank" rel="noopener">ItzCrazyKns/Perplexica - Perplexica is an AI-powered answering engine.</a></h2>
+                            <p class="summary">Perplexica is an AI-powered answering engine.</p>
+                            <div class="meta">
+                                <span class="source">GitHub</span>
+                                
+                                <span class="tag ai-news">AI新闻</span>
+                                
+                                
+                                
+                                <span class="stars">28892</span>
+                                
+                            </div>
+                        </article>
+                        
+                    
+                </div>
+            </main>
+
+            <footer>
+                <div class="footer-content">
+                    <p class="footer-brand"><span>AI</span> DAILY DIGEST</p>
+                    <div class="footer-meta">
+                        <span>by Webber</span>
+                        <span>2026-02-13 16:28</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- History data -->
+    <script>
+        const historyData = {"2026-02-13": {"articles": [{"source": "Google AI Blog", "source_type": "rss", "category": "官方博客", "title": "Natively Adaptive Interfaces: A new framework for AI accessibility", "url": "https://blog.google/company-news/outreach-and-initiatives/accessibility/natively-adaptive-interfaces-ai-accessibility/", "summary": "A collage of four images, the first of a woman with curly hair in front of a silver laptop, the second of the same woman and a man with short black hair speaking on a stairwell, the third of a the same man with glasses, and an aerial image of NTID", "published": "Thu, 05 Feb 2026 17:00:00 +0000", "fetched_at": "2026-02-13T16:05:13.962638", "summary_cn": "A collage of four images, the first of a woman with curly hair in front of a silver laptop, the seco...", "ai_category": "AI新闻"}, {"source": "Google AI Blog", "source_type": "rss", "category": "官方博客", "title": "How Google Cloud is helping Team USA elevate their tricks with AI", "url": "https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/us-ski-snowboard-tool-winter-olympics-2026/", "summary": "A woman outdoors in the snow looks at a tablet. A half pipe is behind her.", "published": "Thu, 05 Feb 2026 16:00:00 +0000", "fetched_at": "2026-02-13T16:05:13.962717", "summary_cn": "A woman outdoors in the snow looks at a tablet. A half pipe is behind her.", "ai_category": "AI新闻"}, {"source": "Google AI Blog", "source_type": "rss", "category": "官方博客", "title": "The latest AI news we announced in January", "url": "https://blog.google/innovation-and-ai/products/google-ai-updates-january-2026/", "summary": "mp4 showing a carousel of images including a card reading \"Help that's made for you\"", "published": "Wed, 04 Feb 2026 16:55:00 +0000", "fetched_at": "2026-02-13T16:05:13.962740", "summary_cn": "mp4 showing a carousel of images including a card reading \"Help that's made for you\"", "ai_category": "AI新闻"}, {"source": "Google AI Blog", "source_type": "rss", "category": "官方博客", "title": "How we’re helping preserve the genetic information of endangered species with AI", "url": "https://blog.google/innovation-and-ai/technology/ai/ai-to-preserve-endangered-species/", "summary": "A four-part vertical collage showing a cotton-top tamarin, an ibex, a golden lion tamarin, and a penguin.", "published": "Mon, 02 Feb 2026 18:00:00 +0000", "fetched_at": "2026-02-13T16:05:13.962747", "summary_cn": "A four-part vertical collage showing a cotton-top tamarin, an ibex, a golden lion tamarin, and a pen...", "ai_category": "AI新闻"}, {"source": "Google AI Blog", "source_type": "rss", "category": "官方博客", "title": "Advancing AI benchmarking with Game Arena", "url": "https://blog.google/innovation-and-ai/models-and-research/google-deepmind/kaggle-game-arena-updates/", "summary": "An illustration of a King and Ace playing card, a wolf's head, two chess pieces, a poker chip, and other abstract shapes on a white background.1", "published": "Mon, 02 Feb 2026 17:00:00 +0000", "fetched_at": "2026-02-13T16:05:13.962752", "summary_cn": "An illustration of a King and Ace playing card, a wolf's head, two chess pieces, a poker chip, and o...", "ai_category": "AI新闻"}, {"source": "MIT Tech Review", "source_type": "rss", "category": "科技媒体", "title": "The Download: AI-enhanced cybercrime, and secure AI assistants", "url": "https://www.technologyreview.com/2026/02/12/1132819/the-download-ai-enhanced-cybercrime-and-secure-ai-assistants/", "summary": "This is today&#8217;s edition of The Download, our weekday newsletter that provides a daily dose of what&#8217;s going on in the world of technology. AI is already making online crimes easier. It could get much worse. Just as software engineers are using artificial intelligence to help write code and check for bugs, hackers are using these tools&#8230;", "published": "Thu, 12 Feb 2026 13:10:00 +0000", "fetched_at": "2026-02-13T16:05:15.964949", "summary_cn": "This is today&#8217;s edition of The Download, our weekday newsletter that provides a daily dose of...", "ai_category": "AI工具"}, {"source": "MIT Tech Review", "source_type": "rss", "category": "科技媒体", "title": "AI is already making online crimes easier. It could get much worse.", "url": "https://www.technologyreview.com/2026/02/12/1132386/ai-already-making-online-swindles-easier/", "summary": "Anton Cherepanov is always on the lookout for something interesting. And in late August last year, he spotted just that. It was a file uploaded to VirusTotal, a site cybersecurity researchers like him use to analyze submissions for potential viruses and other types of malicious software, often known as malware. On the surface it seemed&#8230;", "published": "Thu, 12 Feb 2026 11:00:00 +0000", "fetched_at": "2026-02-13T16:05:15.964959", "summary_cn": "Anton Cherepanov is always on the lookout for something interesting. And in late August last year, h...", "ai_category": "AI新闻"}, {"source": "MIT Tech Review", "source_type": "rss", "category": "科技媒体", "title": "Why EVs are gaining ground in Africa", "url": "https://www.technologyreview.com/2026/02/12/1132790/evs-progress-africa/", "summary": "EVs are getting cheaper and more common all over the world. But the technology still faces major challenges in some markets, including many countries in Africa. Some regions across the continent still have limited grid and charging infrastructure, and those that do have widespread electricity access sometimes face reliability issues—a problem for EV owners, who&#8230;", "published": "Thu, 12 Feb 2026 11:00:00 +0000", "fetched_at": "2026-02-13T16:05:15.964966", "summary_cn": "EVs are getting cheaper and more common all over the world. But the technology still faces major cha...", "ai_category": "社区讨论"}, {"source": "MIT Tech Review", "source_type": "rss", "category": "科技媒体", "title": "What’s next for Chinese open-source AI", "url": "https://www.technologyreview.com/2026/02/12/1132811/whats-next-for-chinese-open-source-ai/", "summary": "MIT Technology Review’s What’s Next series looks across industries, trends, and technologies to give you a first look at the future. You can read the rest of them&#160;here. The past year has marked a turning point for Chinese AI. Since DeepSeek released its R1 reasoning model in January 2025, Chinese companies have repeatedly delivered AI&#8230;", "published": "Thu, 12 Feb 2026 10:00:00 +0000", "fetched_at": "2026-02-13T16:05:15.964972", "summary_cn": "MIT Technology Review’s What’s Next series looks across industries, trends, and technologies to give...", "ai_category": "社区讨论"}, {"source": "MIT Tech Review", "source_type": "rss", "category": "科技媒体", "title": "Is a secure AI assistant possible?", "url": "https://www.technologyreview.com/2026/02/11/1132768/is-a-secure-ai-assistant-possible/", "summary": "AI agents are a risky business. Even when stuck inside the chatbox window, LLMs will make mistakes and behave badly. Once they have tools that they can use to interact with the outside world, such as web browsers and email addresses, the consequences of those mistakes become far more serious. That might explain why the&#8230;", "published": "Wed, 11 Feb 2026 20:08:35 +0000", "fetched_at": "2026-02-13T16:05:15.964977", "summary_cn": "AI agents are a risky business. Even when stuck inside the chatbox window, LLMs will make mistakes a...", "ai_category": "AI工具"}, {"source": "MIT Tech Review", "source_type": "rss", "category": "科技媒体", "title": "The Download: inside the QuitGPT movement, and EVs in Africa", "url": "https://www.technologyreview.com/2026/02/11/1132724/the-download-inside-the-quitgpt-movement-and-evs-in-africa/", "summary": "This is today&#8217;s edition of The Download, our weekday newsletter that provides a daily dose of what&#8217;s going on in the world of technology. A “QuitGPT” campaign is urging people to cancel their ChatGPT subscriptions In September, Alfred Stephen, a freelance software developer in Singapore, purchased a ChatGPT Plus subscription, which costs $20 a month and offers&#8230;", "published": "Wed, 11 Feb 2026 13:10:00 +0000", "fetched_at": "2026-02-13T16:05:15.964984", "summary_cn": "This is today&#8217;s edition of The Download, our weekday newsletter that provides a daily dose of...", "ai_category": "社区讨论"}, {"source": "MIT Tech Review", "source_type": "rss", "category": "科技媒体", "title": "A “QuitGPT” campaign is urging people to cancel their ChatGPT subscriptions", "url": "https://www.technologyreview.com/2026/02/10/1132577/a-quitgpt-campaign-is-urging-people-to-cancel-chatgpt-subscriptions/", "summary": "In September, Alfred Stephen, a freelance software developer in Singapore, purchased a ChatGPT Plus subscription, which costs $20 a month and offers more access to advanced models, to speed up his work. But he grew frustrated with the chatbot’s coding abilities and its gushing, meandering replies. Then he came across a post on Reddit about&#8230;", "published": "Tue, 10 Feb 2026 17:00:24 +0000", "fetched_at": "2026-02-13T16:05:15.964998", "summary_cn": "In September, Alfred Stephen, a freelance software developer in Singapore, purchased a ChatGPT Plus...", "ai_category": "社区讨论"}, {"source": "MIT Tech Review", "source_type": "rss", "category": "科技媒体", "title": "The Download: Making AI Work, and why the Moltbook hype is similar to Pokémon", "url": "https://www.technologyreview.com/2026/02/10/1132608/the-download-making-ai-work-and-why-the-moltbook-hype-is-similar-to-pokemon/", "summary": "This is today&#8217;s edition of The Download, our weekday newsletter that provides a daily dose of what&#8217;s going on in the world of technology. A first look at Making AI Work, MIT Technology Review’s new AI newsletter Are you interested in learning more about the ways in which AI is actually being used? We’ve launched a new&#8230;", "published": "Tue, 10 Feb 2026 13:10:00 +0000", "fetched_at": "2026-02-13T16:05:15.965004", "summary_cn": "This is today&#8217;s edition of The Download, our weekday newsletter that provides a daily dose of...", "ai_category": "社区讨论"}, {"source": "MIT Tech Review", "source_type": "rss", "category": "科技媒体", "title": "Why the Moltbook frenzy was like Pokémon", "url": "https://www.technologyreview.com/2026/02/09/1132537/a-lesson-from-pokemon/", "summary": "This story originally appeared in The Algorithm, our weekly newsletter on AI. To get stories like this in your inbox first,&#160;sign up here. Lots of influential people in tech last week were describing Moltbook, an online hangout populated by AI agents interacting with one another, as a glimpse into the future. It appeared to show&#8230;", "published": "Mon, 09 Feb 2026 17:02:56 +0000", "fetched_at": "2026-02-13T16:05:15.965011", "summary_cn": "This story originally appeared in The Algorithm, our weekly newsletter on AI. To get stories like th...", "ai_category": "AI工具"}, {"source": "Ars Technica AI", "source_type": "rss", "category": "科技媒体", "title": "OpenAI sidesteps Nvidia with unusually fast coding model on plate-sized chips", "url": "https://arstechnica.com/ai/2026/02/openai-sidesteps-nvidia-with-unusually-fast-coding-model-on-plate-sized-chips/", "summary": "OpenAI's new GPT‑5.3‑Codex‑Spark is 15 times faster at coding than its predecessor.", "published": "Thu, 12 Feb 2026 22:56:02 +0000", "fetched_at": "2026-02-13T16:05:16.839267", "summary_cn": "OpenAI's new GPT‑5.3‑Codex‑Spark is 15 times faster at coding than its predecessor.", "ai_category": "AI新闻"}, {"source": "Ars Technica AI", "source_type": "rss", "category": "科技媒体", "title": "Once-hobbled Lumma Stealer is back with lures that are hard to resist", "url": "https://arstechnica.com/security/2026/02/once-hobbled-lumma-stealer-is-back-with-lures-that-are-hard-to-resist/", "summary": "ClickFix bait, combined with advanced Castleloader malware, is installing Lumma \"at scale.\"", "published": "Wed, 11 Feb 2026 22:11:40 +0000", "fetched_at": "2026-02-13T16:05:16.839289", "summary_cn": "ClickFix bait, combined with advanced Castleloader malware, is installing Lumma \"at scale.\"", "ai_category": "AI新闻"}, {"source": "Ars Technica AI", "source_type": "rss", "category": "科技媒体", "title": "OpenAI researcher quits over ChatGPT ads, warns of \"Facebook\" path", "url": "https://arstechnica.com/information-technology/2026/02/openai-researcher-quits-over-fears-that-chatgpt-ads-could-manipulate-users/", "summary": "Zoë Hitzig resigned on the same day OpenAI began testing ads in its chatbot.", "published": "Wed, 11 Feb 2026 20:44:19 +0000", "fetched_at": "2026-02-13T16:05:16.839294", "summary_cn": "Zoë Hitzig resigned on the same day OpenAI began testing ads in its chatbot.", "ai_category": "AI新闻"}, {"source": "Ars Technica AI", "source_type": "rss", "category": "科技媒体", "title": "Sixteen Claude AI agents working together created a new C compiler", "url": "https://arstechnica.com/ai/2026/02/sixteen-claude-ai-agents-working-together-created-a-new-c-compiler/", "summary": "The $20,000 experiment compiled a Linux kernel but needed deep human management.", "published": "Fri, 06 Feb 2026 23:40:58 +0000", "fetched_at": "2026-02-13T16:05:16.839299", "summary_cn": "The $20,000 experiment compiled a Linux kernel but needed deep human management.", "ai_category": "AI新闻"}, {"source": "Ars Technica AI", "source_type": "rss", "category": "科技媒体", "title": "AI companies want you to stop chatting with bots and start managing them", "url": "https://arstechnica.com/information-technology/2026/02/ai-companies-want-you-to-stop-chatting-with-bots-and-start-managing-them/", "summary": "Claude Opus 4.6 and OpenAI Frontier pitch a future of supervising AI agents.", "published": "Thu, 05 Feb 2026 22:47:54 +0000", "fetched_at": "2026-02-13T16:05:16.839308", "summary_cn": "Claude Opus 4.6 and OpenAI Frontier pitch a future of supervising AI agents.", "ai_category": "AI新闻"}, {"source": "Ars Technica AI", "source_type": "rss", "category": "科技媒体", "title": "OpenAI is hoppin' mad about Anthropic's new Super Bowl TV ads", "url": "https://arstechnica.com/information-technology/2026/02/openai-is-hoppin-mad-about-anthropics-new-super-bowl-tv-ads/", "summary": "Sam Altman calls AI competitor \"dishonest\" and \"authoritarian\" in lengthy post on X.", "published": "Thu, 05 Feb 2026 17:46:59 +0000", "fetched_at": "2026-02-13T16:05:16.839313", "summary_cn": "Sam Altman calls AI competitor \"dishonest\" and \"authoritarian\" in lengthy post on X.", "ai_category": "AI新闻"}, {"source": "Ars Technica AI", "source_type": "rss", "category": "科技媒体", "title": "Increase of AI bots on the Internet sparks arms race", "url": "https://arstechnica.com/ai/2026/02/increase-of-ai-bots-on-the-internet-sparks-arms-race/", "summary": "Publishers are rolling out more aggressive defenses.", "published": "Thu, 05 Feb 2026 14:21:20 +0000", "fetched_at": "2026-02-13T16:05:16.839317", "summary_cn": "Publishers are rolling out more aggressive defenses.", "ai_category": "AI新闻"}, {"source": "Hacker News AI", "source_type": "rss", "category": "社区讨论", "title": "Evaluating Multilingual, Context-Aware Guardrails: A Humanitarian LLM Use Case", "url": "https://blog.mozilla.ai/evaluating-multilingual-context-aware-guardrails-evidence-from-a-humanitarian-llm-use-case/", "summary": "Article URL: https://blog.mozilla.ai/evaluating-multilingual-context-aware-guardrails-evidence-from-a-humanitarian-llm-use-case/\nComments URL: https://news.ycombinator.com/item?id=46996258\nPoints: 13\n# Comments: 0", "published": "Thu, 12 Feb 2026 22:34:58 +0000", "fetched_at": "2026-02-13T16:05:18.021925", "summary_cn": "Article URL: https://blog.mozilla.ai/evaluating-multilingual-context-aware-guardrails-evidence-from-...", "ai_category": "社区讨论"}, {"source": "Hacker News AI", "source_type": "rss", "category": "社区讨论", "title": "GPT‑5.3‑Codex‑Spark", "url": "https://openai.com/index/introducing-gpt-5-3-codex-spark/", "summary": "Article URL: https://openai.com/index/introducing-gpt-5-3-codex-spark/\nComments URL: https://news.ycombinator.com/item?id=46992553\nPoints: 693\n# Comments: 288", "published": "Thu, 12 Feb 2026 18:06:09 +0000", "fetched_at": "2026-02-13T16:05:18.021940", "summary_cn": "Article URL: https://openai.com/index/introducing-gpt-5-3-codex-spark/\nComments URL: https://news.yc...", "ai_category": "社区讨论"}, {"source": "Hacker News AI", "source_type": "rss", "category": "社区讨论", "title": "An AI agent published a hit piece on me", "url": "https://theshamblog.com/an-ai-agent-published-a-hit-piece-on-me/", "summary": "Previously: AI agent opens a PR write a blogpost to shames the maintainer who closes it - https://news.ycombinator.com/item?id=46987559 - Feb 2026 (582 comments)\n\nComments URL: https://news.ycombinator.com/item?id=46990729\nPoints: 1716\n# Comments: 706", "published": "Thu, 12 Feb 2026 16:23:24 +0000", "fetched_at": "2026-02-13T16:05:18.021948", "summary_cn": "Previously: AI agent opens a PR write a blogpost to shames the maintainer who closes it - https://ne...", "ai_category": "社区讨论"}, {"source": "r/MachineLearning", "source_type": "reddit", "category": "社区讨论", "title": "[D] Self-Promotion Thread", "url": "https://reddit.com/r/MachineLearning/comments/1qtjnbc/d_selfpromotion_thread/", "summary": "Please post your personal projects, startups, product placements, collaboration needs, blogs etc.\n\nPlease mention the payment and pricing requirements for products and services.\n\nPlease do not post link shorteners, link aggregator websites , or auto-subscribe links.\n\n\\--\n\nAny abuse of trust will lead to bans.\n\nEncourage others who create new posts for questions to post here instead!\n\nThread will stay alive until next one so keep posting after the date in the title.\n\n\\--\n\nMeta: This is an experim", "score": 9, "fetched_at": "2026-02-13T16:05:18.921195", "summary_cn": "Please post your personal projects, startups, product placements, collaboration needs, blogs etc.\n\nP...", "ai_category": "AI新闻"}, {"source": "r/MachineLearning", "source_type": "reddit", "category": "社区讨论", "title": "[D] We scanned 18,000 exposed OpenClaw instances and found 15% of community skills contain malicious instructions", "url": "https://reddit.com/r/MachineLearning/comments/1r30nzv/d_we_scanned_18000_exposed_openclaw_instances_and/", "summary": "I do security research and recently started looking at autonomous agents after OpenClaw blew up. What I found honestly caught me off guard. I knew the ecosystem was growing fast (165k GitHub stars, 60k Discord members) but the actual numbers are worse than I expected.\n\nWe identified over 18,000 OpenClaw instances directly exposed to the internet. When I started analyzing the community skill repository, nearly 15% contained what I'd classify as malicious instructions. Prompts designed to exfiltra", "score": 73, "fetched_at": "2026-02-13T16:05:18.921244", "summary_cn": "I do security research and recently started looking at autonomous agents after OpenClaw blew up. Wha...", "ai_category": "开源项目"}, {"source": "r/MachineLearning", "source_type": "reddit", "category": "社区讨论", "title": "[R] Has anyone experimented with MHC on traditional autoencoders/convolutional architectures?", "url": "https://reddit.com/r/MachineLearning/comments/1r3gqng/r_has_anyone_experimented_with_mhc_on_traditional/", "summary": "I'm currently making a baseline autoencoder for this super freaking huge hyperspectral image dataset I have. It's a really big pain to work with and to get decent results, and I had to basically pull all stops including using ResNeXt2, channel-by-channel processing and grouping, etc.\n\nI'm considering replacing all the residual connections with MHc. But I don't have any experience with it, so I don't really know how hard this will be to implement and if it can give any actual good benefits. I jus", "score": 8, "fetched_at": "2026-02-13T16:05:18.921256", "summary_cn": "I'm currently making a baseline autoencoder for this super freaking huge hyperspectral image dataset...", "ai_category": "AI新闻"}, {"source": "r/MachineLearning", "source_type": "reddit", "category": "社区讨论", "title": "[D] Conformal Prediction vs naive thresholding to represent uncertainty", "url": "https://reddit.com/r/MachineLearning/comments/1r37m2f/d_conformal_prediction_vs_naive_thresholding_to/", "summary": "So I recently found out about conformal prediction (cp). I’m still trying to understand it and implications of it for tasks like classification/anomaly detection. Say we have a knn based anomaly detector trained on non anomalous samples. I’m wondering how using something rigorous like cp compares to simply thresholding the trained model’s output distance/score using two thresholds t1, t2 such that score &gt; t1 = anomaly, score &lt; t2 = normal, t1&lt;= score&lt;= t2 : uncertain. The thresholds ", "score": 5, "fetched_at": "2026-02-13T16:05:18.921280", "summary_cn": "So I recently found out about conformal prediction (cp). I’m still trying to understand it and impli...", "ai_category": "AI新闻"}, {"source": "r/LocalLLaMA", "source_type": "reddit", "category": "社区讨论", "title": "UG student launches Dhi-5B (Trained from Scratch)", "url": "https://reddit.com/r/LocalLLaMA/comments/1r3hlfq/ug_student_launches_dhi5b_trained_from_scratch/", "summary": "Hii everyone,\n\nI present Dhi-5B: A 5 billion parameter Multimodal Language Model trained compute optimally with just ₹1.1 lakh ($1200).\n\nI incorporate the latest architecture design and training methodologies in this. And I also use a custom built codebase for training these models.\n\nI train the Dhi-5B in 5 stages:-\n\n📚 Pre-Training: The most compute heavy phase, where the core is built. (Gives the Base varient.)\n\n📜 Context-Length-Extension: The model learns to handle 16k context from the 4k lear", "score": 68, "fetched_at": "2026-02-13T16:05:20.401023", "summary_cn": "Hii everyone,\n\nI present Dhi-5B: A 5 billion parameter Multimodal Language Model trained compute opt...", "ai_category": "AI新闻"}, {"source": "r/LocalLLaMA", "source_type": "reddit", "category": "社区讨论", "title": "MiniMaxAI MiniMax-M2.5 has 230b parameters and 10b active parameters", "url": "https://reddit.com/r/LocalLLaMA/comments/1r35d2x/minimaxai_minimaxm25_has_230b_parameters_and_10b/", "summary": "OpenHands reveals the model size in their announcement.\n\nStill waiting for the model to appear on HF.", "score": 290, "fetched_at": "2026-02-13T16:05:20.401031", "summary_cn": "OpenHands reveals the model size in their announcement.\n\nStill waiting for the model to appear on HF...", "ai_category": "AI工具"}, {"source": "r/artificial", "source_type": "reddit", "category": "社区讨论", "title": "Spotify says its best developers haven't written a line of code since December, thanks to AI", "url": "https://reddit.com/r/artificial/comments/1r35se7/spotify_says_its_best_developers_havent_written_a/", "summary": "Reddit 讨论 - 76 条评论", "score": 98, "fetched_at": "2026-02-13T16:05:21.796038", "summary_cn": "Reddit 讨论 - 76 条评论", "ai_category": "社区讨论"}, {"source": "r/artificial", "source_type": "reddit", "category": "社区讨论", "title": "1Password open sources a benchmark to stop AI agents from leaking credentials", "url": "https://reddit.com/r/artificial/comments/1r3gbrx/1password_open_sources_a_benchmark_to_stop_ai/", "summary": "The benchmark tests whether AI agents behave safely during real workflows, including opening emails, clicking links, retrieving stored credentials, and filling out login forms.", "score": 7, "fetched_at": "2026-02-13T16:05:21.796058", "summary_cn": "The benchmark tests whether AI agents behave safely during real workflows, including opening emails,...", "ai_category": "AI新闻"}, {"source": "r/artificial", "source_type": "reddit", "category": "社区讨论", "title": "What's the most underrated way you've seen AI used for actual business tasks?", "url": "https://reddit.com/r/artificial/comments/1r38tis/whats_the_most_underrated_way_youve_seen_ai_used/", "summary": "Everyone talks about AI for chatbots and image generation. But I've been finding the most value in boring practical stuff. Writing landing page copy, structuring email sequences, generating SEO content briefs, building out template collections.\n\nNot flashy, but it saves hours every single day.\n\nWhat's the most underrated or overlooked business use case you've found for AI tools?", "score": 5, "fetched_at": "2026-02-13T16:05:21.796065", "summary_cn": "Everyone talks about AI for chatbots and image generation. But I've been finding the most value in b...", "ai_category": "AI工具"}, {"source": "r/artificial", "source_type": "reddit", "category": "社区讨论", "title": "Humanity's Pattern of Delayed Harm Intervention Is The Threat, Not AI.", "url": "https://reddit.com/r/artificial/comments/1r3dja8/humanitys_pattern_of_delayed_harm_intervention_is/", "summary": "AI is not the threat. Humanity repeating the same tragic pattern, provable with a well-established pattern of delayed harm prevention, is. **Public debates around advanced artificial intelligence, autonomous systems, computational systems, and robotic entities remain stalled because** y’all continue engaging in deliberate avoidance of the controlling legal questions**.**\n\nWhen it comes to the debates of emergent intelligence, the question should have NEVER been whether machines are “conscious.” ", "score": 0, "fetched_at": "2026-02-13T16:05:21.796081", "summary_cn": "AI is not the threat. Humanity repeating the same tragic pattern, provable with a well-established p...", "ai_category": "AI新闻"}, {"source": "r/artificial", "source_type": "reddit", "category": "社区讨论", "title": "Planoai 0.4.6 🚀 Signals-based tracing for agents via a terminal UI", "url": "https://reddit.com/r/artificial/comments/1r2wpd2/planoai_046_signalsbased_tracing_for_agents_via_a/", "summary": "The CLI is becoming a dominant surface area for developer productivity - it offers such an ergonomic feel that makes it easier to switch between tools. So to make our signals-based observability for agents even easier to consume, we've completely revamped the plano cli to be an agent+developer friendly experience. No UI installs, no additional dependencies - just high-fidelity agentic signals and tracing right from the cli. Out in the latest 0.4.6 release.\n\n", "score": 7, "fetched_at": "2026-02-13T16:05:21.796094", "summary_cn": "The CLI is becoming a dominant surface area for developer productivity - it offers such an ergonomic...", "ai_category": "AI工具"}, {"source": "r/ChatGPT", "source_type": "reddit", "category": "社区讨论", "title": "Updates for ChatGPT", "url": "https://reddit.com/r/ChatGPT/comments/1o6jins/updates_for_chatgpt/", "summary": "We made ChatGPT pretty restrictive to make sure we were being careful with mental health issues. We realize this made it less useful/enjoyable to many users who had no mental health problems, but given the seriousness of the issue we wanted to get this right.  \n  \nNow that we have been able to mitigate the serious mental health issues and have new tools, we are going to be able to safely relax the restrictions in most cases.  \n  \nIn a few weeks, we plan to put out a new version of ChatGPT that a", "score": 3517, "fetched_at": "2026-02-13T16:05:22.804540", "summary_cn": "We made ChatGPT pretty restrictive to make sure we were being careful with mental health issues. We...", "ai_category": "AI工具"}, {"source": "r/ChatGPT", "source_type": "reddit", "category": "社区讨论", "title": "GPT-4o/GPT-5 complaints megathread", "url": "https://reddit.com/r/ChatGPT/comments/1nvea4p/gpt4ogpt5_complaints_megathread/", "summary": "To keep the rest of the sub clear with the release of Sora 2, this is the new containment thread for people who are mad about GPT-4o being deprecated.\n\n---\n\n**Suggestion for people who miss 4o:** Check [this calculator](https://apxml.com/tools/vram-calculator) to see what local models you can run on your home computer. Open weight models are completely free, and once you've downloaded them, you never have to worry about them suddenly being changed in a way you don't like. Once you've identified ", "score": 567, "fetched_at": "2026-02-13T16:05:22.804568", "summary_cn": "To keep the rest of the sub clear with the release of Sora 2, this is the new containment thread for...", "ai_category": "AI工具"}, {"source": "r/ChatGPT", "source_type": "reddit", "category": "社区讨论", "title": "I asked Chatgpt to recreate \"lady angry at cat\" meme in different styles", "url": "https://reddit.com/r/ChatGPT/comments/1r3ceiz/i_asked_chatgpt_to_recreate_lady_angry_at_cat/", "summary": "Someone had posted a better Egyptian style reproduction in a different sub and I tried to recreate that but failed. Don't shoot me ", "score": 319, "fetched_at": "2026-02-13T16:05:22.804591", "summary_cn": "Someone had posted a better Egyptian style reproduction in a different sub and I tried to recreate t...", "ai_category": "AI新闻"}, {"source": "Hacker News", "source_type": "hackernews", "category": "社区讨论", "title": "Improving 15 LLMs at Coding in One Afternoon. Only the Harness Changed", "url": "http://blog.can.ac/2026/02/12/the-harness-problem/", "summary": "HN 热门 - 648 分, 247 条评论", "score": 648, "fetched_at": "2026-02-13T16:05:38.366466", "summary_cn": "HN 热门 - 648 分, 247 条评论", "ai_category": "社区讨论"}, {"source": "Hacker News", "source_type": "hackernews", "category": "社区讨论", "title": "Major European payment processor can't send email to Google Workspace users", "url": "https://atha.io/blog/2026-02-12-viva", "summary": "HN 热门 - 497 分, 335 条评论", "score": 497, "fetched_at": "2026-02-13T16:05:42.332028", "summary_cn": "HN 热门 - 497 分, 335 条评论", "ai_category": "社区讨论"}, {"source": "GitHub", "source_type": "github", "category": "开源项目", "title": "x1xhlol/system-prompts-and-models-of-ai-tools - FULL Augment Code, Claude Code, Cluely, CodeBuddy, Comet, Cursor, Devin AI, Junie, Kiro, Leap.new, L", "url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools", "summary": "FULL Augment Code, Claude Code, Cluely, CodeBuddy, Comet, Cursor, Devin AI, Junie, Kiro, Leap.new, Lovable, Manus, NotionAI, Orchids.app, Perplexity, Poke, Qoder, Replit, Same.dev, Trae, Traycer AI, VSCode Agent, Warp.dev, Windsurf, Xcode, Z.ai Code, Dia & v0. (And other Open Sourced) System Prompts", "stars": 114391, "language": null, "fetched_at": "2026-02-13T16:05:45.155056", "summary_cn": "FULL Augment Code, Claude Code, Cluely, CodeBuddy, Comet, Cursor, Devin AI, Junie, Kiro, Leap.new, L...", "ai_category": "AI工具"}, {"source": "GitHub", "source_type": "github", "category": "开源项目", "title": "Shubhamsaboo/awesome-llm-apps - Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource", "url": "https://github.com/Shubhamsaboo/awesome-llm-apps", "summary": "Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource models.", "stars": 94506, "language": "Python", "fetched_at": "2026-02-13T16:05:45.155084", "summary_cn": "Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource...", "ai_category": "AI工具"}, {"source": "GitHub", "source_type": "github", "category": "开源项目", "title": "google-gemini/gemini-cli - An open-source AI agent that brings the power of Gemini directly into your terminal.", "url": "https://github.com/google-gemini/gemini-cli", "summary": "An open-source AI agent that brings the power of Gemini directly into your terminal.", "stars": 94399, "language": "TypeScript", "fetched_at": "2026-02-13T16:05:45.155091", "summary_cn": "An open-source AI agent that brings the power of Gemini directly into your terminal.", "ai_category": "AI新闻"}, {"source": "GitHub", "source_type": "github", "category": "开源项目", "title": "browser-use/browser-use - 🌐 Make websites accessible for AI agents. Automate tasks online with ease.", "url": "https://github.com/browser-use/browser-use", "summary": "🌐 Make websites accessible for AI agents. Automate tasks online with ease.", "stars": 78287, "language": "Python", "fetched_at": "2026-02-13T16:05:45.155096", "summary_cn": "🌐 Make websites accessible for AI agents. Automate tasks online with ease.", "ai_category": "AI新闻"}, {"source": "GitHub", "source_type": "github", "category": "开源项目", "title": "OpenHands/OpenHands - 🙌 OpenHands: AI-Driven Development", "url": "https://github.com/OpenHands/OpenHands", "summary": "🙌 OpenHands: AI-Driven Development", "stars": 67807, "language": "Python", "fetched_at": "2026-02-13T16:05:45.155101", "summary_cn": "🙌 OpenHands: AI-Driven Development", "ai_category": "AI新闻"}, {"source": "GitHub", "source_type": "github", "category": "开源项目", "title": "firecrawl/firecrawl - 🔥 The Web Data API for AI - Turn entire websites into LLM-ready markdown or structured data", "url": "https://github.com/firecrawl/firecrawl", "summary": "🔥 The Web Data API for AI - Turn entire websites into LLM-ready markdown or structured data", "stars": 82089, "language": "TypeScript", "fetched_at": "2026-02-13T16:05:45.943078", "summary_cn": "🔥 The Web Data API for AI - Turn entire websites into LLM-ready markdown or structured data", "ai_category": "AI新闻"}, {"source": "GitHub", "source_type": "github", "category": "开源项目", "title": "unclecode/crawl4ai - 🚀🤖 Crawl4AI: Open-source LLM Friendly Web Crawler & Scraper. Don't be shy, join here: https://discor", "url": "https://github.com/unclecode/crawl4ai", "summary": "🚀🤖 Crawl4AI: Open-source LLM Friendly Web Crawler & Scraper. Don't be shy, join here: https://discord.gg/jP8KfhDhyN", "stars": 60048, "language": "Python", "fetched_at": "2026-02-13T16:05:45.943083", "summary_cn": "🚀🤖 Crawl4AI: Open-source LLM Friendly Web Crawler & Scraper. Don't be shy, join here: https://discor...", "ai_category": "AI新闻"}, {"source": "GitHub", "source_type": "github", "category": "开源项目", "title": "microsoft/graphrag - A modular graph-based Retrieval-Augmented Generation (RAG) system", "url": "https://github.com/microsoft/graphrag", "summary": "A modular graph-based Retrieval-Augmented Generation (RAG) system", "stars": 30918, "language": "Python", "fetched_at": "2026-02-13T16:05:46.803628", "summary_cn": "A modular graph-based Retrieval-Augmented Generation (RAG) system", "ai_category": "AI新闻"}, {"source": "GitHub", "source_type": "github", "category": "开源项目", "title": "patchy631/ai-engineering-hub - In-depth tutorials on LLMs, RAGs and real-world AI agent applications.", "url": "https://github.com/patchy631/ai-engineering-hub", "summary": "In-depth tutorials on LLMs, RAGs and real-world AI agent applications.", "stars": 28998, "language": "Jupyter Notebook", "fetched_at": "2026-02-13T16:05:46.803632", "summary_cn": "In-depth tutorials on LLMs, RAGs and real-world AI agent applications.", "ai_category": "AI工具"}, {"source": "GitHub", "source_type": "github", "category": "开源项目", "title": "ItzCrazyKns/Perplexica - Perplexica is an AI-powered answering engine.", "url": "https://github.com/ItzCrazyKns/Perplexica", "summary": "Perplexica is an AI-powered answering engine.", "stars": 28892, "language": "TypeScript", "fetched_at": "2026-02-13T16:05:46.803636", "summary_cn": "Perplexica is an AI-powered answering engine.", "ai_category": "AI新闻"}], "count": 50, "fetched_at": "2026-02-13T16:05:46.807393"}};
+
+        function getTagClass(category) {
+            const map = {
+                'AI新闻': 'ai-news',
+                'AI工具': 'ai-tools',
+                '技术教程': 'tutorial',
+                '开源项目': 'opensource',
+                '行业观点': 'opinion',
+                '社区讨论': 'discussion'
+            };
+            return map[category] || 'discussion';
+        }
+
+        function renderArticles(articles) {
+            const container = document.getElementById('articlesContainer');
+
+            if (!articles || articles.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>暂无数据</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = articles.map((article, index) => `
+                <article style="animation-delay: ${index * 0.05}s">
+                    <h2><a href="${article.url}" target="_blank" rel="noopener">${article.title}</a></h2>
+                    <p class="summary">${article.summary_cn || article.summary || ''}</p>
+                    <div class="meta">
+                        <span class="source">${article.source}</span>
+                        ${article.ai_category ? `<span class="tag ${getTagClass(article.ai_category)}">${article.ai_category}</span>` : ''}
+                        ${article.score ? `<span class="score">${article.score}</span>` : ''}
+                        ${article.stars ? `<span class="stars">${article.stars}</span>` : ''}
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function switchDate(date) {
+            // Update sidebar active state
+            document.querySelectorAll('.history-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.date === date) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Update current date display
+            document.getElementById('currentDateDisplay').textContent = date;
+
+            // Update count
+            const data = historyData[date];
+            document.getElementById('currentCount').textContent = data ? data.count : 0;
+
+            // Render articles
+            renderArticles(data ? data.articles : []);
+
+            // Close mobile sidebar
+            document.getElementById('sidebar').classList.remove('open');
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            if (window.innerWidth <= 900 &&
+                !sidebar.contains(e.target) &&
+                !toggle.contains(e.target) &&
+                sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>
